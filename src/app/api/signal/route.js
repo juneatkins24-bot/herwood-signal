@@ -1,20 +1,11 @@
-export async function POST(request) {
-  const body = await request.json()
+export async function GET(request) {
+  const { searchParams } = new URL(request.url)
+  const query = searchParams.get('q') || ''
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 800,
-      messages: body.messages,
-    }),
-  })
+  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=5&apiKey=${process.env.NEWSAPI_KEY}`
 
+  const res = await fetch(url)
   const data = await res.json()
+
   return Response.json(data)
 }
