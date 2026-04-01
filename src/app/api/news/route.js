@@ -8,7 +8,6 @@ export async function GET(request) {
     const res = await fetch(url)
     const data = await res.json()
 
-    // Normalize Guardian response to match the shape the component expects
     const articles = (data.response?.results || []).map(a => ({
       title: a.webTitle?.replace(/\s*[-|].*$/, '').trim(),
       source: { name: 'The Guardian' }
