@@ -181,7 +181,6 @@ export default function HerwoodSignal() {
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [loadMsg, setLoadMsg] = useState('Pulling live data')
-  const [hoveredBrand, setHoveredBrand] = useState(null)
 
   const load = useCallback(async (force = false) => {
     if (!force) {
@@ -294,14 +293,11 @@ export default function HerwoodSignal() {
             const faint = toRgb(c, 0.12)
             const mid = toRgb(c, 0.22)
             const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
-            const isHovered = hoveredBrand === brand.name
             return (
               <div
                 key={brand.name}
                 className="cell"
                 style={{ background: `linear-gradient(to bottom,${faint},${mid})`, animationDelay: `${i * 0.06}s` }}
-                onMouseEnter={() => setHoveredBrand(brand.name)}
-                onMouseLeave={() => setHoveredBrand(null)}
               >
                 <div className="tbar" style={{ background: rgb }} />
                 <div className="trend" style={{ color: trendColor }}>
@@ -310,31 +306,6 @@ export default function HerwoodSignal() {
                 <div className="score" style={{ color: rgb }}>{brand.score}</div>
                 <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
                 <div className="cname">{brand.name}</div>
-
-                {isHovered && (
-                  <div className="tooltip">
-                    <div style={{ fontSize: 10, fontWeight: 600, color: '#F2F4F7', marginBottom: 6, letterSpacing: '0.08em' }}>{brand.name}</div>
-                    <div style={{ fontSize: 9, color: 'rgba(168,196,224,0.7)', marginBottom: 4, lineHeight: 1.5 }}>{brand.verdict}</div>
-                    <div style={{ height: 1, background: 'rgba(168,196,224,0.1)', margin: '6px 0' }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(242,244,247,0.45)' }}>
-                        <span>Wiki views/week</span>
-                        <span style={{ color: 'rgba(242,244,247,0.7)', fontWeight: 600 }}>{brand.wikiTotal.toLocaleString()}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(242,244,247,0.45)' }}>
-                        <span>News articles</span>
-                        <span style={{ color: 'rgba(242,244,247,0.7)', fontWeight: 600 }}>{brand.newsCount}</span>
-                      </div>
-                    </div>
-                    {brand.headlines?.[0] && (
-                      <>
-                        <div style={{ height: 1, background: 'rgba(168,196,224,0.1)', margin: '6px 0' }} />
-                        <div style={{ fontSize: 9, color: 'rgba(168,196,224,0.5)', marginBottom: 2, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Latest</div>
-                        <div style={{ fontSize: 9, color: 'rgba(242,244,247,0.55)', lineHeight: 1.5 }}>{brand.headlines[0].title}</div>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             )
           })}
