@@ -231,7 +231,7 @@ export default function HerwoodSignal() {
     .hlabel{font-size:7.5px;font-weight:600;letter-spacing:0.14em;}
     .cname{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(242,244,247,0.45);}
     .trend{position:absolute;top:5px;right:7px;font-size:10px;}
-    .tooltip{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0E1820;border:1px solid rgba(168,196,224,0.2);border-radius:4px;padding:10px 12px;width:190px;z-index:50;animation:tooltipIn 0.2s ease;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    .tooltip{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(14,24,32,0.96);border:1px solid rgba(168,196,224,0.2);border-radius:0;padding:8px 10px;z-index:50;animation:tooltipIn 0.15s ease;pointer-events:none;display:flex;flex-direction:column;justify-content:center;gap:4px;}
     .ticker{height:38px;display:flex;align-items:center;border-top:1px solid rgba(168,196,224,0.1);overflow:hidden;}
     .tlabel{padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;border-right:1px solid rgba(168,196,224,0.1);flex-shrink:0;}
     .tscroll{flex:1;overflow:hidden;display:flex;align-items:center;}
