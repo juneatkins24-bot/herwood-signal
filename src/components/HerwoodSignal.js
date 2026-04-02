@@ -221,14 +221,14 @@ export default function HerwoodSignal() {
     .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
     @media(max-width:768px){
-      .grid{display:flex;height:110px;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+      .grid{display:flex;flex-wrap:nowrap;height:110px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
       .grid::-webkit-scrollbar{display:none;}
-      .cell{min-width:80px;flex-shrink:0;scroll-snap-align:start;}
-      .score{font-size:24px;}
-      .hlabel{font-size:6.5px;}
-      .cname{font-size:7px;}
+      .cell{min-width:72px;width:72px;flex-shrink:0;scroll-snap-align:start;}
+      .score{font-size:22px;}
+      .hlabel{font-size:6px;letter-spacing:0.1em;}
+      .cname{font-size:6.5px;letter-spacing:0.08em;}
       .datasrc{display:none;}
-      .masthead{font-size:11px;letter-spacing:0.1em;}
+      .masthead{font-size:10px;letter-spacing:0.08em;}
       .header{padding:0 10px;height:34px;}
       .updated{display:none;}
       .arrows{display:flex;}
