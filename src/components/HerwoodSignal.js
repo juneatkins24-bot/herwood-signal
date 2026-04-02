@@ -220,11 +220,13 @@ export default function HerwoodSignal() {
     .header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:36px;border-bottom:1px solid rgba(168,196,224,0.1);}
     .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
+    .mobile-track{display:contents;}
     @keyframes mobileTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     @media(max-width:768px){
       .grid{display:block;height:110px;overflow:hidden;position:relative;}
       .mobile-track{display:flex;height:110px;animation:mobileTicker 40s linear infinite;width:max-content;}
-      .cell{flex:0 0 80px;width:80px;height:110px;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;}
+      .cell{flex:0 0 80px;width:80px;height:110px;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;animation:none;}
+      .cell-dup{display:flex;flex:0 0 80px;width:80px;height:110px;border-right:1px solid rgba(14,24,32,0.7);flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;}
       .score{font-size:22px;}
       .hlabel{font-size:6px;letter-spacing:0.1em;}
       .cname{font-size:6.5px;letter-spacing:0.08em;}
@@ -243,6 +245,7 @@ export default function HerwoodSignal() {
     .cell{flex:1;min-width:0;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
     .cell:hover{filter:brightness(1.18);}
     .cell:last-child{border-right:none;}
+    .cell-dup{display:none;}
     .tbar{position:absolute;top:0;left:0;right:0;height:3px;}
     .score{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1;}
     .hlabel{font-size:7.5px;font-weight:600;letter-spacing:0.14em;}
@@ -341,7 +344,7 @@ export default function HerwoodSignal() {
               return (
                 <div
                   key={`${brand.name}-dup`}
-                  className="cell"
+                  className="cell cell-dup"
                   style={{ background: `linear-gradient(to bottom,${faint},${mid})` }}
                 >
                   <div className="tbar" style={{ background: rgb }} />
