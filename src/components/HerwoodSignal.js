@@ -221,18 +221,25 @@ export default function HerwoodSignal() {
     .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
     @media(max-width:768px){
-      .grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:1fr 1fr 1fr;height:300px;}
-      .cell{border-right:1px solid rgba(14,24,32,0.7);border-bottom:1px solid rgba(14,24,32,0.7);}
-      .cell:nth-child(5n){border-right:none;}
-      .cell:nth-child(n+11){border-bottom:none;}
-      .score{font-size:22px;}
-      .hlabel{font-size:6px;}
-      .cname{font-size:6.5px;}
-      .header{padding:0 12px;}
-      .masthead{font-size:11px;letter-spacing:0.12em;}
+      .grid{display:flex;height:110px;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+      .grid::-webkit-scrollbar{display:none;}
+      .cell{min-width:80px;flex-shrink:0;scroll-snap-align:start;}
+      .score{font-size:24px;}
+      .hlabel{font-size:6.5px;}
+      .cname{font-size:7px;}
       .datasrc{display:none;}
+      .masthead{font-size:11px;letter-spacing:0.1em;}
+      .header{padding:0 10px;height:34px;}
+      .updated{display:none;}
+      .arrows{display:flex;}
     }
-    .cell{flex:1;min-width:75px;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
+    @media(min-width:769px){
+      .arrows{display:none;}
+    }
+    .arrows{gap:4px;align-items:center;}
+    .arrow-btn{background:none;border:1px solid rgba(168,196,224,0.3);color:rgba(168,196,224,0.7);width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;border-radius:2px;transition:all 0.2s;padding:0;}
+    .arrow-btn:hover{border-color:#A8C4E0;color:#A8C4E0;}
+    .cell{flex:1;min-width:0;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
     .cell:hover{filter:brightness(1.18);}
     .cell:last-child{border-right:none;}
     .tbar{position:absolute;top:0;left:0;right:0;height:3px;}
@@ -284,7 +291,11 @@ export default function HerwoodSignal() {
             <span style={{ fontSize: 9, letterSpacing: '0.1em', color: 'rgba(168,196,224,0.28)' }}>{today}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 9, letterSpacing: '0.08em', color: 'rgba(168,196,224,0.4)' }}>Updated {fmt(lastUpdated)}</span>
+            <div className="arrows">
+              <button className="arrow-btn" onClick={() => document.querySelector('.grid').scrollBy({ left: -160, behavior: 'smooth' })}>‹</button>
+              <button className="arrow-btn" onClick={() => document.querySelector('.grid').scrollBy({ left: 160, behavior: 'smooth' })}>›</button>
+            </div>
+            <span className="updated" style={{ fontSize: 9, letterSpacing: '0.08em', color: 'rgba(168,196,224,0.4)' }}>Updated {fmt(lastUpdated)}</span>
             <button className="rbtn" onClick={() => load(true)}>↺ Refresh</button>
           </div>
         </div>
