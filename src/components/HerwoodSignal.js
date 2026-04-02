@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const CACHE_KEY = 'herwood-signal-live-v1'
+const CACHE_KEY = 'herwood-signal-live-v3'
 const HOUR_MS = 3_600_000
 
 const BRANDS = [
