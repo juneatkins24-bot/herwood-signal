@@ -218,13 +218,14 @@ export default function HerwoodSignal() {
     @keyframes tooltipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
     .banner{background:#0E1820;font-family:'DM Sans',sans-serif;width:100%;border-radius:4px;overflow:visible;}
     .header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:36px;border-bottom:1px solid rgba(168,196,224,0.1);}
+    .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
     @media(max-width:768px){
-      .grid{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:1fr 1fr;height:200px;}
+      .grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:1fr 1fr 1fr;height:300px;}
       .cell{border-right:1px solid rgba(14,24,32,0.7);border-bottom:1px solid rgba(14,24,32,0.7);}
-      .cell:nth-child(8n){border-right:none;}
-      .cell:nth-child(n+9){border-bottom:none;}
-      .score{font-size:20px;}
+      .cell:nth-child(5n){border-right:none;}
+      .cell:nth-child(n+11){border-bottom:none;}
+      .score{font-size:22px;}
       .hlabel{font-size:6px;}
       .cname{font-size:6.5px;}
       .header{padding:0 12px;}
@@ -275,7 +276,7 @@ export default function HerwoodSignal() {
 
         <div className="header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontFamily: "'Abril Fatface',serif", fontSize: 13, letterSpacing: '0.18em', color: '#F2F4F7' }}>THE HERWOOD SIGNAL</span>
+            <span className="masthead">THE HERWOOD SIGNAL</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#B83A2A', display: 'inline-block', animation: 'blink 2s infinite' }} />
               <span style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(168,196,224,0.65)' }}>LIVE</span>
