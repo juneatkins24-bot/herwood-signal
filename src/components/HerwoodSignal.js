@@ -66,14 +66,11 @@ function setCache(data) {
 }
 
 async function fetchWikiViews(article) {
-  const end = new Date()
-  const start = new Date(end - 7 * 86400000)
-  const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '')
-  const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/all-agents/${encodeURIComponent(article)}/daily/${fmt(start)}/${fmt(end)}`
+  const url = `/api/wiki?article=${encodeURIComponent(article)}`
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'HerwoodSignal/1.0' } })
+    const res = await fetch(url)
     const data = await res.json()
-    if (!data.items) return { total: 0, trend: 'flat' }
+    if (!data.items || data.items.length === 0) return { total: 0, trend: 'flat' }
     const views = data.items.map(i => i.views)
     const total = views.reduce((a, b) => a + b, 0)
     const firstHalf = views.slice(0, 3).reduce((a, b) => a + b, 0) / 3
