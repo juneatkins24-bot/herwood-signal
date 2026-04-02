@@ -231,11 +231,11 @@ export default function HerwoodSignal() {
     .hlabel{font-size:7.5px;font-weight:600;letter-spacing:0.14em;}
     .cname{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(242,244,247,0.45);}
     .trend{position:absolute;top:5px;right:7px;font-size:10px;}
-    .tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0E1820;border:1px solid rgba(168,196,224,0.2);border-radius:4px;padding:10px 12px;width:190px;z-index:50;animation:tooltipIn 0.2s ease;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    .tooltip{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0E1820;border:1px solid rgba(168,196,224,0.2);border-radius:4px;padding:10px 12px;width:190px;z-index:50;animation:tooltipIn 0.2s ease;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
     .ticker{height:38px;display:flex;align-items:center;border-top:1px solid rgba(168,196,224,0.1);overflow:hidden;}
     .tlabel{padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;border-right:1px solid rgba(168,196,224,0.1);flex-shrink:0;}
     .tscroll{flex:1;overflow:hidden;display:flex;align-items:center;}
-    .tinner{display:inline-block;white-space:nowrap;animation:ticker 80s linear infinite;}
+    .tinner{display:inline-block;white-space:nowrap;animation:ticker 160s linear infinite;}
     .rbtn{background:none;border:1px solid rgba(184,58,42,0.6);color:#B83A2A;padding:3px 9px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.14em;cursor:pointer;transition:all 0.2s;font-weight:600;}
     .rbtn:hover{background:#B83A2A;color:#F2F4F7;}
     .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:214px;background:#0E1820;border-radius:4px;}
