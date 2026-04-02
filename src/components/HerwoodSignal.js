@@ -223,7 +223,7 @@ export default function HerwoodSignal() {
     @media(max-width:768px){
       .grid{display:flex;flex-wrap:nowrap;height:110px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
       .grid::-webkit-scrollbar{display:none;}
-      .cell{min-width:72px;width:72px;flex-shrink:0;scroll-snap-align:start;}
+      .cell{flex:0 0 72px;width:72px;min-width:72px;scroll-snap-align:start;}
       .score{font-size:22px;}
       .hlabel{font-size:6px;letter-spacing:0.1em;}
       .cname{font-size:6.5px;letter-spacing:0.08em;}
