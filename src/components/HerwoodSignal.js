@@ -220,10 +220,11 @@ export default function HerwoodSignal() {
     .header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:36px;border-bottom:1px solid rgba(168,196,224,0.1);}
     .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
+    @keyframes mobileTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     @media(max-width:768px){
-      .grid{display:flex;flex-wrap:nowrap;height:110px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-      .grid::-webkit-scrollbar{display:none;}
-      .cell{flex:0 0 72px;width:72px;min-width:72px;scroll-snap-align:start;}
+      .grid{display:block;height:110px;overflow:hidden;position:relative;}
+      .mobile-track{display:flex;height:110px;animation:mobileTicker 40s linear infinite;width:max-content;}
+      .cell{flex:0 0 80px;width:80px;height:110px;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;}
       .score{font-size:22px;}
       .hlabel{font-size:6px;letter-spacing:0.1em;}
       .cname{font-size:6.5px;letter-spacing:0.08em;}
@@ -231,7 +232,7 @@ export default function HerwoodSignal() {
       .masthead{font-size:10px;letter-spacing:0.08em;}
       .header{padding:0 10px;height:34px;}
       .updated{display:none;}
-      .arrows{display:flex;}
+      .arrows{display:none;}
     }
     @media(min-width:769px){
       .arrows{display:none;}
@@ -308,28 +309,52 @@ export default function HerwoodSignal() {
         </div>
 
         <div className="grid">
-          {sorted.map((brand, i) => {
-            const c = getHeatColor(brand.score)
-            const rgb = toRgb(c)
-            const faint = toRgb(c, 0.12)
-            const mid = toRgb(c, 0.22)
-            const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
-            return (
-              <div
-                key={brand.name}
-                className="cell"
-                style={{ background: `linear-gradient(to bottom,${faint},${mid})`, animationDelay: `${i * 0.06}s` }}
-              >
-                <div className="tbar" style={{ background: rgb }} />
-                <div className="trend" style={{ color: trendColor }}>
-                  {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
+          <div className="mobile-track">
+            {sorted.map((brand, i) => {
+              const c = getHeatColor(brand.score)
+              const rgb = toRgb(c)
+              const faint = toRgb(c, 0.12)
+              const mid = toRgb(c, 0.22)
+              const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
+              return (
+                <div
+                  key={brand.name}
+                  className="cell"
+                  style={{ background: `linear-gradient(to bottom,${faint},${mid})`, animationDelay: `${i * 0.06}s` }}
+                >
+                  <div className="tbar" style={{ background: rgb }} />
+                  <div className="trend" style={{ color: trendColor }}>
+                    {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
+                  </div>
+                  <div className="score" style={{ color: rgb }}>{brand.score}</div>
+                  <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
+                  <div className="cname">{brand.name}</div>
                 </div>
-                <div className="score" style={{ color: rgb }}>{brand.score}</div>
-                <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
-                <div className="cname">{brand.name}</div>
-              </div>
-            )
-          })}
+              )
+            })}
+            {sorted.map((brand, i) => {
+              const c = getHeatColor(brand.score)
+              const rgb = toRgb(c)
+              const faint = toRgb(c, 0.12)
+              const mid = toRgb(c, 0.22)
+              const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
+              return (
+                <div
+                  key={`${brand.name}-dup`}
+                  className="cell"
+                  style={{ background: `linear-gradient(to bottom,${faint},${mid})` }}
+                >
+                  <div className="tbar" style={{ background: rgb }} />
+                  <div className="trend" style={{ color: trendColor }}>
+                    {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
+                  </div>
+                  <div className="score" style={{ color: rgb }}>{brand.score}</div>
+                  <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
+                  <div className="cname">{brand.name}</div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         <div className="ticker">
