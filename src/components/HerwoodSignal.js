@@ -222,6 +222,18 @@ export default function HerwoodSignal() {
     .banner{background:#0E1820;font-family:'DM Sans',sans-serif;width:100%;border-radius:4px;overflow:visible;}
     .header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:36px;border-bottom:1px solid rgba(168,196,224,0.1);}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
+    @media(max-width:768px){
+      .grid{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:1fr 1fr;height:200px;}
+      .cell{border-right:1px solid rgba(14,24,32,0.7);border-bottom:1px solid rgba(14,24,32,0.7);}
+      .cell:nth-child(8n){border-right:none;}
+      .cell:nth-child(n+9){border-bottom:none;}
+      .score{font-size:20px;}
+      .hlabel{font-size:6px;}
+      .cname{font-size:6.5px;}
+      .header{padding:0 12px;}
+      .masthead{font-size:11px;letter-spacing:0.12em;}
+      .datasrc{display:none;}
+    }
     .cell{flex:1;min-width:75px;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
     .cell:hover{filter:brightness(1.18);}
     .cell:last-child{border-right:none;}
