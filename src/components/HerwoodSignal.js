@@ -14,6 +14,14 @@ const BRANDS = [
   { name: 'Skims', wiki: 'Skims', news: 'Skims' },
   { name: 'Erewhon', wiki: 'Erewhon_(market)', news: 'Erewhon' },
   { name: 'Jacquemus', wiki: 'Jacquemus', news: 'Jacquemus' },
+  { name: 'Glossier', wiki: 'Glossier', news: 'Glossier' },
+  { name: 'Sweetgreen', wiki: 'Sweetgreen', news: 'Sweetgreen' },
+  { name: 'Owala', wiki: 'Owala', news: 'Owala water bottle' },
+  { name: 'Chamberlain', wiki: 'Chamberlain_Coffee', news: 'Chamberlain Coffee Emma' },
+  { name: 'Unwell', wiki: 'Alex_Cooper_(podcaster)', news: 'Unwell network Alex Cooper' },
+  { name: 'Stanley', wiki: 'Stanley_(brand)', news: 'Stanley cup tumbler brand' },
+  { name: 'MomTok', wiki: 'TikTok', news: 'MomTok TikTok influencer' },
+  { name: 'Staples', wiki: 'Staples_Inc.', news: 'Staples rebrand retail' },
 ]
 
 function lerp(a, b, t) { return a + (b - a) * t }
