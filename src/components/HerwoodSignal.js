@@ -50,6 +50,15 @@ async function fetchBrands() {
   return brands || []
 }
 
+// Fetch hot takes from Google Sheet
+async function fetchTakes() {
+  try {
+    const res = await fetch('/api/takes')
+    const { takes } = await res.json()
+    return takes || []
+  } catch { return [] }
+}
+
 async function fetchWikiViews(article) {
   const url = `/api/wiki?article=${encodeURIComponent(article)}`
   try {
@@ -121,8 +130,8 @@ ${summary}
 }
 
 async function fetchAllData() {
-  // Pull brands from Google Sheet first
-  const sheetBrands = await fetchBrands()
+  // Pull brands and takes from Google Sheet in parallel
+  const [sheetBrands, takes] = await Promise.all([fetchBrands(), fetchTakes()])
 
   const results = await Promise.all(
     sheetBrands.map(async brand => {
@@ -162,19 +171,36 @@ async function fetchAllData() {
   return {
     brands: results.map(b => ({ ...b, verdict: verdictMap[b.name] || '' })),
     tickerTake: ai.tickerTake,
+    takes,
   }
 }
 
 function buildTicker(data) {
   if (!data) return ''
   const parts = []
+
+  // Sheet hot takes first — your voice front and center
+  if (data.takes?.length) {
+    data.takes.forEach(t => {
+      const prefix = t.type === 'NOISE' ? '◆ NOISE' : t.type === 'TAKE' ? '◆ TAKE' : '◆ SIGNAL'
+      const brand = t.brand ? `  [${t.brand}]` : ''
+      parts.push(`${prefix}  ${t.text}${brand}`)
+    })
+  }
+
+  // AI editorial take
   if (data.tickerTake) parts.push(`◆ SIGNAL  ${data.tickerTake}`)
+
+  // Latest headlines
   data.brands.slice(0, 5).forEach(b => {
     if (b.headlines?.[0]?.title) parts.push(`◆ ${b.name.toUpperCase()}  ${b.headlines[0].title}`)
   })
+
+  // Brand verdicts + stats
   data.brands.forEach(b => {
     parts.push(`◆ ${b.name.toUpperCase()}  ${b.verdict}${b.wikiTotal ? `  ·  ${b.wikiTotal.toLocaleString()} wiki views` : ''}`)
   })
+
   return parts.join('          ')
 }
 
