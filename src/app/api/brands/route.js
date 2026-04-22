@@ -1,4 +1,4 @@
-const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkrqwjSAk2XYHvRgc2hywVb_o4ogYQ-txqLaF9a5N83oZNQp8DZ1KykG6PlFnoGw/pub?gid=428892484&single=true&output=csv'
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTT0y1M7zRKbO8x0e_tNF7tzqFOE-04bXorKZ-EAo1jTzom44IaooyhMp75oCGf1a-OLDz-ZkcoVinC/pub?gid=428892484&single=true&output=csv'
 
 export async function GET() {
   try {
