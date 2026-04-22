@@ -2,27 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const CACHE_KEY = 'herwood-signal-live-v3'
+const CACHE_KEY = 'herwood-signal-live-v5'
 const HOUR_MS = 3_600_000
-
-const BRANDS = [
-  { name: 'Reale Actives', wiki: 'Alix_Earle', news: 'Reale Actives Alix Earle' },
-  { name: 'WNBA', wiki: "Women%27s_National_Basketball_Association", news: 'WNBA' },
-  { name: 'Rhode', wiki: 'Rhode_(brand)', news: 'Rhode skin Hailey Bieber' },
-  { name: 'Olipop', wiki: 'Olipop_(drink)', news: 'Olipop' },
-  { name: 'Rare Beauty', wiki: 'Rare_Beauty', news: 'Rare Beauty Selena Gomez' },
-  { name: 'Skims', wiki: 'Skims', news: 'Skims' },
-  { name: 'Erewhon', wiki: 'Erewhon_(market)', news: 'Erewhon' },
-  { name: 'Jacquemus', wiki: 'Jacquemus', news: 'Jacquemus' },
-  { name: 'Glossier', wiki: 'Glossier', news: 'Glossier' },
-  { name: 'Sweetgreen', wiki: 'Sweetgreen', news: 'Sweetgreen' },
-  { name: 'Owala', wiki: 'Owala', news: 'Owala water bottle' },
-  { name: 'Chamberlain', wiki: 'Chamberlain_Coffee', news: 'Chamberlain Coffee Emma' },
-  { name: 'Unwell', wiki: 'Alex_Cooper_(podcaster)', news: 'Unwell network Alex Cooper' },
-  { name: 'Stanley', wiki: 'Stanley_(brand)', news: 'Stanley cup tumbler brand' },
-  { name: 'MomTok', wiki: 'TikTok', news: 'MomTok TikTok influencer' },
-  { name: 'Staples', wiki: 'Staples_Inc.', news: 'Staples rebrand retail' },
-]
 
 function lerp(a, b, t) { return a + (b - a) * t }
 
@@ -48,7 +29,6 @@ function getHeatLabel(s) {
   return 'COLD'
 }
 
-// Cache helpers using localStorage (works everywhere)
 function getCached() {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
@@ -60,9 +40,14 @@ function getCached() {
 }
 
 function setCache(data) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() }))
-  } catch (_) {}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })) } catch (_) {}
+}
+
+// Fetch brands from Google Sheet via Vercel proxy
+async function fetchBrands() {
+  const res = await fetch('/api/brands')
+  const { brands } = await res.json()
+  return brands || []
 }
 
 async function fetchWikiViews(article) {
@@ -105,19 +90,17 @@ function computeScore(wikiTotal, newsCount, wikiTrend) {
   return score
 }
 
-// Calls our secure Next.js API route — Anthropic key never touches the browser
 async function generateVerdicts(brands) {
   const summary = brands
     .map(b => `${b.name}: score ${b.score}, wiki ${b.wikiTotal} views/week, news ${b.newsCount} articles, trend ${b.trend}`)
     .join('\n')
-
   const res = await fetch('/api/signal', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       messages: [{
         role: 'user',
-        content: `You are the editorial voice of THE HERWOOD SIGNAL, a brand intelligence dashboard by Herwood Creative. Voice: direct, dry, specific. No hedging.
+        content: `You are the editorial voice of THE HERWOOD SIGNAL, a brand intelligence dashboard by Herwood Creative. Voice: direct, dry, specific. No hedging. No em dashes.
 
 Based on this REAL data, write a short verdict for each brand. Return ONLY valid JSON, no markdown, no backticks.
 
@@ -132,21 +115,43 @@ ${summary}
       }],
     }),
   })
-
   const d = await res.json()
   const text = d.content.filter(b => b.type === 'text').map(b => b.text).join('')
   return JSON.parse(text.replace(/```json|```/g, '').trim())
 }
 
 async function fetchAllData() {
+  // Pull brands from Google Sheet first
+  const sheetBrands = await fetchBrands()
+
   const results = await Promise.all(
-    BRANDS.map(async brand => {
+    sheetBrands.map(async brand => {
+      // If sheet has a score override, skip API calls for this brand
+      if (brand.scoreOverride) {
+        return {
+          name: brand.name,
+          score: brand.scoreOverride,
+          trend: 'flat',
+          wikiTotal: 0,
+          newsCount: 0,
+          headlines: [],
+          hasOverride: true,
+        }
+      }
       const [wiki, news] = await Promise.all([
         fetchWikiViews(brand.wiki),
         fetchNews(brand.news || brand.name),
       ])
       const score = computeScore(wiki.total, news.count, wiki.trend)
-      return { name: brand.name, score, trend: wiki.trend, wikiTotal: wiki.total, newsCount: news.count, headlines: news.headlines }
+      return {
+        name: brand.name,
+        score,
+        trend: wiki.trend,
+        wikiTotal: wiki.total,
+        newsCount: news.count,
+        headlines: news.headlines,
+        hasOverride: false,
+      }
     })
   )
 
@@ -155,7 +160,7 @@ async function fetchAllData() {
   ai.brands.forEach(b => { verdictMap[b.name] = b.verdict })
 
   return {
-    brands: results.map(b => ({ ...b, verdict: verdictMap[b.name] || 'no verdict available' })),
+    brands: results.map(b => ({ ...b, verdict: verdictMap[b.name] || '' })),
     tickerTake: ai.tickerTake,
   }
 }
@@ -164,11 +169,11 @@ function buildTicker(data) {
   if (!data) return ''
   const parts = []
   if (data.tickerTake) parts.push(`◆ SIGNAL  ${data.tickerTake}`)
-  data.brands.slice(0, 4).forEach(b => {
+  data.brands.slice(0, 5).forEach(b => {
     if (b.headlines?.[0]?.title) parts.push(`◆ ${b.name.toUpperCase()}  ${b.headlines[0].title}`)
   })
   data.brands.forEach(b => {
-    parts.push(`◆ ${b.name.toUpperCase()}  ${b.verdict}  ·  ${b.wikiTotal.toLocaleString()} wiki views  ·  ${b.newsCount} articles this week`)
+    parts.push(`◆ ${b.name.toUpperCase()}  ${b.verdict}${b.wikiTotal ? `  ·  ${b.wikiTotal.toLocaleString()} wiki views` : ''}`)
   })
   return parts.join('          ')
 }
@@ -177,21 +182,16 @@ export default function HerwoodSignal() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
-  const [loadMsg, setLoadMsg] = useState('Pulling live data')
+  const [loadMsg, setLoadMsg] = useState('Reading the sheet')
 
   const load = useCallback(async (force = false) => {
     if (!force) {
       const cached = getCached()
-      if (cached) {
-        setData(cached.data)
-        setLastUpdated(new Date(cached.ts))
-        return
-      }
+      if (cached) { setData(cached.data); setLastUpdated(new Date(cached.ts)); return }
     }
     setLoading(true)
-    const msgs = ['Pulling live data', 'Fetching Wikipedia', 'Scanning news', 'Computing scores', 'Writing verdicts', 'Almost live']
-    let i = 0
-    setLoadMsg(msgs[0])
+    const msgs = ['Reading the sheet', 'Fetching Wikipedia', 'Scanning news', 'Computing scores', 'Writing verdicts', 'Almost live']
+    let i = 0; setLoadMsg(msgs[0])
     const iv = setInterval(() => { i = Math.min(i + 1, msgs.length - 1); setLoadMsg(msgs[i]) }, 3000)
     try {
       const result = await fetchAllData()
@@ -215,13 +215,31 @@ export default function HerwoodSignal() {
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0.15}}
     @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     @keyframes cellIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes tooltipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-    .banner{background:#0E1820;font-family:'DM Sans',sans-serif;width:100%;border-radius:4px;overflow:visible;}
+    @keyframes mobileTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .banner{background:#0E1820;font-family:'DM Sans',sans-serif;width:100%;overflow:visible;}
     .header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:36px;border-bottom:1px solid rgba(168,196,224,0.1);}
     .masthead{font-family:'Abril Fatface',serif;font-size:13px;letter-spacing:0.18em;color:#F2F4F7;white-space:nowrap;}
     .grid{display:flex;height:140px;position:relative;overflow:visible;}
     .mobile-track{display:contents;}
-    @keyframes mobileTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .cell{flex:1;min-width:0;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
+    .cell:hover{filter:brightness(1.18);}
+    .cell:last-child{border-right:none;}
+    .cell-dup{display:none;}
+    .tbar{position:absolute;top:0;left:0;right:0;height:3px;}
+    .score{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1;}
+    .hlabel{font-size:7.5px;font-weight:600;letter-spacing:0.14em;}
+    .cname{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(242,244,247,0.45);}
+    .trend{position:absolute;top:5px;right:7px;font-size:10px;}
+    .ticker{height:38px;display:flex;align-items:center;border-top:1px solid rgba(168,196,224,0.1);overflow:hidden;}
+    .tlabel{padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;border-right:1px solid rgba(168,196,224,0.1);flex-shrink:0;}
+    .tscroll{flex:1;overflow:hidden;display:flex;align-items:center;}
+    .tinner{display:inline-block;white-space:nowrap;animation:ticker 160s linear infinite;}
+    .rbtn{background:none;border:1px solid rgba(184,58,42,0.6);color:#B83A2A;padding:3px 9px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.14em;cursor:pointer;transition:all 0.2s;font-weight:600;}
+    .rbtn:hover{background:#B83A2A;color:#F2F4F7;}
+    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:214px;background:#0E1820;}
+    .datasrc{display:flex;align-items:center;gap:10px;padding:0 18px;height:26px;border-bottom:1px solid rgba(168,196,224,0.07);}
+    .srctag{font-size:8.5px;letter-spacing:0.1em;color:rgba(168,196,224,0.35);display:flex;align-items:center;gap:4px;}
+    .srcdot{width:4px;height:4px;border-radius:50%;background:rgba(168,196,224,0.35);display:inline-block;}
     @media(max-width:768px){
       .grid{display:block;height:110px;overflow:hidden;position:relative;}
       .mobile-track{display:flex;height:110px;animation:mobileTicker 40s linear infinite;width:max-content;}
@@ -233,36 +251,31 @@ export default function HerwoodSignal() {
       .datasrc{display:none;}
       .masthead{font-size:10px;letter-spacing:0.08em;}
       .header{padding:0 10px;height:34px;}
-      .updated{display:none;}
-      .arrows{display:none;}
     }
-    @media(min-width:769px){
-      .arrows{display:none;}
-    }
-    .arrows{gap:4px;align-items:center;}
-    .arrow-btn{background:none;border:1px solid rgba(168,196,224,0.3);color:rgba(168,196,224,0.7);width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;border-radius:2px;transition:all 0.2s;padding:0;}
-    .arrow-btn:hover{border-color:#A8C4E0;color:#A8C4E0;}
-    .cell{flex:1;min-width:0;border-right:1px solid rgba(14,24,32,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;cursor:default;animation:cellIn 0.4s ease both;transition:filter 0.15s;}
-    .cell:hover{filter:brightness(1.18);}
-    .cell:last-child{border-right:none;}
-    .cell-dup{display:none;}
-    .tbar{position:absolute;top:0;left:0;right:0;height:3px;}
-    .score{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1;}
-    .hlabel{font-size:7.5px;font-weight:600;letter-spacing:0.14em;}
-    .cname{font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(242,244,247,0.45);}
-    .trend{position:absolute;top:5px;right:7px;font-size:10px;}
-    .tooltip{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(14,24,32,0.96);border:1px solid rgba(168,196,224,0.2);border-radius:0;padding:8px 10px;z-index:50;animation:tooltipIn 0.15s ease;pointer-events:none;display:flex;flex-direction:column;justify-content:center;gap:4px;}
-    .ticker{height:38px;display:flex;align-items:center;border-top:1px solid rgba(168,196,224,0.1);overflow:hidden;}
-    .tlabel{padding:0 14px;height:100%;display:flex;align-items:center;gap:6px;border-right:1px solid rgba(168,196,224,0.1);flex-shrink:0;}
-    .tscroll{flex:1;overflow:hidden;display:flex;align-items:center;}
-    .tinner{display:inline-block;white-space:nowrap;animation:ticker 160s linear infinite;}
-    .rbtn{background:none;border:1px solid rgba(184,58,42,0.6);color:#B83A2A;padding:3px 9px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.14em;cursor:pointer;transition:all 0.2s;font-weight:600;}
-    .rbtn:hover{background:#B83A2A;color:#F2F4F7;}
-    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;height:214px;background:#0E1820;border-radius:4px;}
-    .datasrc{display:flex;align-items:center;gap:10px;padding:0 18px;height:26px;border-bottom:1px solid rgba(168,196,224,0.07);}
-    .srctag{font-size:8.5px;letter-spacing:0.1em;color:rgba(168,196,224,0.35);display:flex;align-items:center;gap:4px;}
-    .srcdot{width:4px;height:4px;border-radius:50%;background:rgba(168,196,224,0.35);display:inline-block;}
   `
+
+  const renderCell = (brand, i, isDup = false) => {
+    const c = getHeatColor(brand.score)
+    const rgb = toRgb(c)
+    const faint = toRgb(c, 0.12)
+    const mid = toRgb(c, 0.22)
+    const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
+    return (
+      <div
+        key={isDup ? `${brand.name}-dup` : brand.name}
+        className={isDup ? 'cell cell-dup' : 'cell'}
+        style={{ background: `linear-gradient(to bottom,${faint},${mid})`, animationDelay: isDup ? undefined : `${i * 0.06}s` }}
+      >
+        <div className="tbar" style={{ background: rgb }} />
+        <div className="trend" style={{ color: trendColor }}>
+          {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
+        </div>
+        <div className="score" style={{ color: rgb }}>{brand.score}</div>
+        <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
+        <div className="cname">{brand.name}</div>
+      </div>
+    )
+  }
 
   if (loading || !data) {
     return (
@@ -274,7 +287,7 @@ export default function HerwoodSignal() {
             <span style={{ animation: 'blink 1.2s infinite', fontSize: 8 }}>●</span>
             {loadMsg}
           </div>
-          <div style={{ fontSize: 9, color: 'rgba(168,196,224,0.3)', letterSpacing: '0.1em' }}>Wikipedia · NewsAPI · Claude AI</div>
+          <div style={{ fontSize: 9, color: 'rgba(168,196,224,0.3)', letterSpacing: '0.1em' }}>Wikipedia · Guardian · Claude AI · Google Sheets</div>
         </div>
       </>
     )
@@ -295,68 +308,23 @@ export default function HerwoodSignal() {
             <span style={{ fontSize: 9, letterSpacing: '0.1em', color: 'rgba(168,196,224,0.28)' }}>{today}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="arrows">
-              <button className="arrow-btn" onClick={() => document.querySelector('.grid').scrollBy({ left: -160, behavior: 'smooth' })}>‹</button>
-              <button className="arrow-btn" onClick={() => document.querySelector('.grid').scrollBy({ left: 160, behavior: 'smooth' })}>›</button>
-            </div>
-            <span className="updated" style={{ fontSize: 9, letterSpacing: '0.08em', color: 'rgba(168,196,224,0.4)' }}>Updated {fmt(lastUpdated)}</span>
+            <span style={{ fontSize: 9, letterSpacing: '0.08em', color: 'rgba(168,196,224,0.4)' }}>Updated {fmt(lastUpdated)}</span>
             <button className="rbtn" onClick={() => load(true)}>↺ Refresh</button>
           </div>
         </div>
 
         <div className="datasrc">
-          <span className="srctag"><span className="srcdot" />Wikipedia Pageviews</span>
-          <span className="srctag"><span className="srcdot" />NewsAPI</span>
-          <span className="srctag"><span className="srcdot" />Claude AI Verdicts</span>
-          <span style={{ marginLeft: 'auto', fontSize: 8.5, color: 'rgba(168,196,224,0.25)', letterSpacing: '0.08em' }}>Scores refresh hourly · Hover for details</span>
+          <span className="srctag"><span className="srcdot" />Wikipedia</span>
+          <span className="srctag"><span className="srcdot" />Guardian</span>
+          <span className="srctag"><span className="srcdot" />Claude AI</span>
+          <span className="srctag"><span className="srcdot" />Google Sheets CMS</span>
+          <span style={{ marginLeft: 'auto', fontSize: 8.5, color: 'rgba(168,196,224,0.25)', letterSpacing: '0.08em' }}>Scores refresh hourly</span>
         </div>
 
         <div className="grid">
           <div className="mobile-track">
-            {sorted.map((brand, i) => {
-              const c = getHeatColor(brand.score)
-              const rgb = toRgb(c)
-              const faint = toRgb(c, 0.12)
-              const mid = toRgb(c, 0.22)
-              const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
-              return (
-                <div
-                  key={brand.name}
-                  className="cell"
-                  style={{ background: `linear-gradient(to bottom,${faint},${mid})`, animationDelay: `${i * 0.06}s` }}
-                >
-                  <div className="tbar" style={{ background: rgb }} />
-                  <div className="trend" style={{ color: trendColor }}>
-                    {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
-                  </div>
-                  <div className="score" style={{ color: rgb }}>{brand.score}</div>
-                  <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
-                  <div className="cname">{brand.name}</div>
-                </div>
-              )
-            })}
-            {sorted.map((brand, i) => {
-              const c = getHeatColor(brand.score)
-              const rgb = toRgb(c)
-              const faint = toRgb(c, 0.12)
-              const mid = toRgb(c, 0.22)
-              const trendColor = brand.trend === 'up' ? '#6fcf97' : brand.trend === 'down' ? '#B83A2A' : 'rgba(242,244,247,0.18)'
-              return (
-                <div
-                  key={`${brand.name}-dup`}
-                  className="cell cell-dup"
-                  style={{ background: `linear-gradient(to bottom,${faint},${mid})` }}
-                >
-                  <div className="tbar" style={{ background: rgb }} />
-                  <div className="trend" style={{ color: trendColor }}>
-                    {brand.trend === 'up' ? '↑' : brand.trend === 'down' ? '↓' : ''}
-                  </div>
-                  <div className="score" style={{ color: rgb }}>{brand.score}</div>
-                  <div className="hlabel" style={{ color: toRgb(c, 0.8) }}>{getHeatLabel(brand.score)}</div>
-                  <div className="cname">{brand.name}</div>
-                </div>
-              )
-            })}
+            {sorted.map((brand, i) => renderCell(brand, i, false))}
+            {sorted.map((brand, i) => renderCell(brand, i, true))}
           </div>
         </div>
 
